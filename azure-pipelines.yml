@@ -1,19 +1,47 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- master
+- development
 
 pool:
   name: LinuxAgentPool
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+variables:
+ global_version: '1.0.0'
+ global_email: 'msriram2407@gmail.com'
+ azure_dev_sub: '9ce91e05-4b9e-4a42-95c1-4385c54920c6'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+stages:
+ - stage: BuildingJavaCodeWithMaven
+   pool:
+    name: LinuxAgentPool
+    demands:
+     - Java -equals 11
+   variables:
+     stage_version: '2.0.0'
+     stage_email: 'msriram2407@gmail.com'
+   jobs:
+   - job: BuildingJavaCodeJob
+     variables:
+       job_version: '3.0.0'
+       job_email: 'msriram2407@gmail.com'
+     timeoutInMinutes: 10
+     steps:
+       - script: echo $(Build.BuildId)
+         displayName: 'Display The Build-ID'
+
+       - script: ls -al && pwd
+         displayName: 'List Files & Current Working Directory'
+
+       - script: mvn clean package deploy && ls -al
+         displayName: 'Run the maven build'
+
+       - script: ls -al && cp /home/adminsree/myagent/_work/1/s/target/spring-petclinic-2.7.3.jar ROOT$(Build.BuildId).jar && ls -al
+         displayName: 'List Files & Rename ROOT.jar'   
+
+       - script: rm -rf /artifacts/*.jar && cp ROOT$(Build.BuildId).jar /artifacts && ls -al /artifacts
+         displayName: 'Copy Artifact To Folder'
+
+       - bash: |
+          echo $(global_version) && echo $(stage_version) && echo $(job_version)
+          echo $(global_email) && echo $(stage_email) && echo $(job_email)
+
+         
